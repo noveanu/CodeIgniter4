@@ -9,14 +9,21 @@
  * file that was distributed with this source code.
  */
 
+use CodeIgniter\Cache\CacheInterface;
 use CodeIgniter\Config\Factories;
 use CodeIgniter\Database\BaseConnection;
 use CodeIgniter\Database\ConnectionInterface;
+use CodeIgniter\Debug\Timer;
 use CodeIgniter\Files\Exceptions\FileNotFoundException;
+use CodeIgniter\HTTP\Cookie\Cookie;
+use CodeIgniter\HTTP\Cookie\CookieStore;
+use CodeIgniter\HTTP\Exceptions\CookieException;
+use CodeIgniter\HTTP\Exceptions\HTTPException;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\HTTP\URI;
+use CodeIgniter\Session\Session;
 use CodeIgniter\Test\TestLogger;
 use Config\App;
 use Config\Database;
@@ -219,6 +226,46 @@ if (! function_exists('config'))
 	function config(string $name, bool $getShared = true)
 	{
 		return Factories::config($name, ['getShared' => $getShared]);
+	}
+}
+
+if (! function_exists('cookie'))
+{
+	/**
+	 * Simpler way to create a new Cookie instance.
+	 *
+	 * @param string $name    Name of the cookie
+	 * @param string $value   Value of the cookie
+	 * @param array  $options Array of options to be passed to the cookie
+	 *
+	 * @throws CookieException
+	 *
+	 * @return Cookie
+	 */
+	function cookie(string $name, string $value = '', array $options = []): Cookie
+	{
+		return Cookie::create($name, $value, $options);
+	}
+}
+
+if (! function_exists('cookies'))
+{
+	/**
+	 * Fetches the global `CookieStore` instance held by `Response`.
+	 *
+	 * @param Cookie[] $cookies   If `getGlobal` is false, this is passed to CookieStore's constructor
+	 * @param boolean  $getGlobal If false, creates a new instance of CookieStore
+	 *
+	 * @return CookieStore
+	 */
+	function cookies(array $cookies = [], bool $getGlobal = true): CookieStore
+	{
+		if ($getGlobal)
+		{
+			return Services::response()->getCookieStore();
+		}
+
+		return new CookieStore($cookies);
 	}
 }
 
@@ -878,12 +925,9 @@ if (! function_exists('old'))
 		}
 
 		// If the result was serialized array or string, then unserialize it for use...
-		if (is_string($value))
+		if (is_string($value) && (strpos($value, 'a:') === 0 || strpos($value, 's:') === 0))
 		{
-			if (strpos($value, 'a:') === 0 || strpos($value, 's:') === 0)
-			{
-				$value = unserialize($value);
-			}
+			$value = unserialize($value);
 		}
 
 		return $escape === false ? $value : esc($value, $escape);
@@ -901,17 +945,17 @@ if (! function_exists('redirect'))
 	 *
 	 * If more control is needed, you must use $response->redirect explicitly.
 	 *
-	 * @param string $uri
+	 * @param string $route
 	 *
 	 * @return RedirectResponse
 	 */
-	function redirect(string $uri = null): RedirectResponse
+	function redirect(string $route = null): RedirectResponse
 	{
-		$response = Services::redirectResponse(null, true);
+		$response = Services::redirectresponse(null, true);
 
-		if (! empty($uri))
+		if (! empty($route))
 		{
-			return $response->route($uri);
+			return $response->route($route);
 		}
 
 		return $response;

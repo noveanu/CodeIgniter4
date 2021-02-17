@@ -2226,8 +2226,6 @@ class BaseBuilder
 		return $this->compileFinalQuery($sql);
 	}
 
-	//--------------------------------------------------------------------
-
 	/**
 	 * Insert
 	 *
@@ -2319,8 +2317,6 @@ class BaseBuilder
 		return 'INSERT ' . $this->compileIgnore('insert') . 'INTO ' . $table . ' (' . implode(', ', $keys) . ') VALUES (' . implode(', ', $unescapedKeys) . ')';
 	}
 
-	//--------------------------------------------------------------------
-
 	/**
 	 * Replace
 	 *
@@ -2384,7 +2380,7 @@ class BaseBuilder
 	 * Groups tables in FROM clauses if needed, so there is no confusion
 	 * about operator precedence.
 	 *
-	 * Note: This is only used (and overridden) by MySQL and CUBRID.
+	 * Note: This is only used (and overridden) by MySQL and SQLSRV.
 	 *
 	 * @return string
 	 */

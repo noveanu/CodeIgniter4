@@ -187,7 +187,7 @@ class Services extends BaseService
 	 * @param EmailConfig|array|null $config
 	 * @param boolean                $getShared
 	 *
-	 * @return Email|mixed
+	 * @return Email
 	 */
 	public static function email($config = null, bool $getShared = true)
 	{
@@ -600,11 +600,11 @@ class Services extends BaseService
 	 *
 	 * @return RedirectResponse
 	 */
-	public static function redirectResponse(App $config = null, bool $getShared = true)
+	public static function redirectresponse(App $config = null, bool $getShared = true)
 	{
 		if ($getShared)
 		{
-			return static::getSharedInstance('redirectResponse', $config);
+			return static::getSharedInstance('redirectresponse', $config);
 		}
 
 		$config   = $config ?? config('App');
@@ -677,7 +677,7 @@ class Services extends BaseService
 			return static::getSharedInstance('security', $config);
 		}
 
-		$config = $config ?? config('Security') ?? config('App');
+		$config = $config ?? config('App');
 
 		return new Security($config);
 	}

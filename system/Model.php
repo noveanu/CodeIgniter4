@@ -415,14 +415,10 @@ class Model extends BaseModel
 				$set[$this->updatedField] = $this->setDate();
 			}
 
-			$result = $builder->update($set);
-		}
-		else
-		{
-			$result = $builder->delete();
+			return $builder->update($set);
 		}
 
-		return $result;
+		return $builder->delete();
 	}
 
 	/**
@@ -757,14 +753,11 @@ class Model extends BaseModel
 	{
 		$properties = parent::objectToRawArray($data, $onlyChanged);
 
-		if (method_exists($data, 'toRawArray'))
+		// Always grab the primary key otherwise updates will fail.
+		if (method_exists($data, 'toRawArray') && (! empty($properties) && ! empty($this->primaryKey) && ! in_array($this->primaryKey, $properties, true)
+				&& ! empty($data->{$this->primaryKey})))
 		{
-			// Always grab the primary key otherwise updates will fail.
-			if (! empty($properties) && ! empty($this->primaryKey) && ! in_array($this->primaryKey, $properties, true)
-				&& ! empty($data->{$this->primaryKey}))
-			{
-				$properties[$this->primaryKey] = $data->{$this->primaryKey};
-			}
+			$properties[$this->primaryKey] = $data->{$this->primaryKey};
 		}
 
 		return $properties;
@@ -809,13 +802,7 @@ class Model extends BaseModel
 		{
 			return true;
 		}
-
-		if (isset($this->builder()->$name))
-		{
-			return true;
-		}
-
-		return false;
+		return isset($this->builder()->$name);
 	}
 
 	/**

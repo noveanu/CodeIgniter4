@@ -346,7 +346,7 @@ class Validation implements ValidationInterface
 	 */
 	public function withRequest(RequestInterface $request): ValidationInterface
 	{
-		if ($request->isJSON())
+		if (strpos($request->getHeaderLine('Content-Type'), 'application/json') !== false)
 		{
 			$this->data = $request->getJSON(true);
 			return $this;
@@ -430,14 +430,16 @@ class Validation implements ValidationInterface
 
 		foreach ($rules as $field => &$rule)
 		{
-			if (is_array($rule))
+			if (! is_array($rule))
 			{
-				if (array_key_exists('errors', $rule))
-				{
-					$this->customErrors[$field] = $rule['errors'];
-					unset($rule['errors']);
-				}
+				continue;
 			}
+			if (! array_key_exists('errors', $rule))
+			{
+				continue;
+			}
+			$this->customErrors[$field] = $rule['errors'];
+			unset($rule['errors']);
 		}
 
 		$this->rules = $rules;
@@ -715,8 +717,7 @@ class Validation implements ValidationInterface
 	{
 		if ($field === null && count($this->rules) === 1)
 		{
-			reset($this->rules);
-			$field = key($this->rules);
+			$field = array_key_first($this->rules);
 		}
 
 		return array_key_exists($field, $this->getErrors()) ? $this->errors[$field] : '';
@@ -744,12 +745,9 @@ class Validation implements ValidationInterface
 		// If we already have errors, we'll use those.
 		// If we don't, check the session to see if any were
 		// passed along from a redirect_with_input request.
-		if (empty($this->errors) && ! is_cli())
+		if (empty($this->errors) && ! is_cli() && isset($_SESSION, $_SESSION['_ci_validation_errors']))
 		{
-			if (isset($_SESSION, $_SESSION['_ci_validation_errors']))
-			{
-				$this->errors = unserialize($_SESSION['_ci_validation_errors']);
-			}
+			$this->errors = unserialize($_SESSION['_ci_validation_errors']);
 		}
 
 		return $this->errors ?? [];
